@@ -15,7 +15,7 @@ var alchemy = alchemy || {};
 	*	@param {Function/Object} Success function or Object containing
 	*	the callback functions and options
 	*	options.success(images) - success function that will be called
-	*	options.failure() - failure function to call
+	*	options.error - failure function to call
 	*	options.cache - whether the images should be caches
 	*/
 	A.loadImages = function(sources, options){	
@@ -35,18 +35,35 @@ var alchemy = alchemy || {};
 			if(options.cache){
 				A.loadImages._cache[sources[i]] = image;
 			}
+			if(options.crossOrigin){
+				image.crossOrigin = 'anonymous';
+			}
 			image.onload = function(){
 				imagesLoaded += 1;
-				if(imagesLoaded == sources.length && options.success)
+				if(sources.length == 1){
+					options.success(image);
+				}
+				else if(imagesLoaded == sources.length && options.success)
 					options.success(images);
 			}
 			image.onerror = function(){
-				if(options.failure)
-					options.failure();
+				if(options.error)
+					options.error();
 			}
 			image.src = sources[i];
 		}
 	};
+
+	A.loadImage = function(source, options){
+		var queue = new createjs.LoadQueue(false);
+		queue.loadFile({id:'img', src:source});
+		queue.addEventListener('complete', function(){
+			var image = queue.getResult('img');
+			image.crossOrigin = '';
+			//console.log(image);
+			options.success(image);
+		})
+	}
 	
 	// Clears the image cache
 	A.clearImageCache = function(){
@@ -234,7 +251,7 @@ var alchemy = alchemy || {};
 	*	@param {Object/Array} Object or Array representing the point to
 	*		test with x and y attributes or with [0] = x and [1] = y
 	*	@return {Object} Returns an object representing nearest point
-	*		on the circle. x = x cord, y = y cord, dis = distance from
+	*		on the circle. x = x cord, y = y cord, dist = distance from
 	*		p to the point.
 	*/
 	A.closestPointOnCircle = function(center, radius, point){
@@ -248,7 +265,7 @@ var alchemy = alchemy || {};
 		var a = {};
 		a.x = c.x + v.x / v.mag * radius;
 		a.y = c.y + v.y / v.mag * radius;
-		a.dis = Math.sqrt(Math.pow((a.x - p.x),2) + Math.pow((a.y - p.y),2));
+		a.dist = Math.sqrt(Math.pow((a.x - p.x),2) + Math.pow((a.y - p.y),2));
 		return a;
 	};
 	
@@ -282,6 +299,52 @@ var alchemy = alchemy || {};
 		var angle = Math.atan2(point.y - center.y, point.x - center.x) * A.rad2deg;
 		return angle >= 0 ? angle : angle + 360;
 	}
+
+	// Dist between two points.
+	A.dist = function(a, b){
+		return Math.sqrt(Math.pow(b.x-a.x,2 ) + Math.pow(b.y - a.y, 2))
+	}
+
+	//Javascript % is a remainder, this is a more conventional mod
+	A.mod = function(x, n){
+		return ((x % n)+n)%n;
+	}
+
+	/*
+	* Assumes degrees. Touching does not mean overlap, 
+	* assumes values [0, 360)
+	* z1: {start, end}
+	*/
+	A.angleOverlap = function(z1, z2){
+		var zone1 = {start: z1.start, end: z1.end};
+		var zone2 = {start: z2.start, end: z2.end};
+		// If zone1 overlaps boundary
+		if(zone1.start > zone1.end){
+			zone1.end = A.mod(zone1.end - zone1.start, 360);
+			zone2.start = A.mod(zone2.start - zone1.start, 360);
+			zone2.end = A.mod(zone2.end - zone1.start, 360);
+			zone1.start = 0;
+		}
+
+		// Check if zone 2 boundaries in zone 1
+		var o = zone2.start > zone1.start && zone2.start < zone1.end
+			||  zone2.end   > zone1.start && zone2.end   < zone1.end;
+		if(o){
+			return o;
+		}
+
+		// if zone2 overlaps boundary
+		if(zone2.start > zone2.end){
+			zone2.end = A.mod(zone2.end - zone2.start, 360);
+			zone1.start = A.mod(zone1.start - zone2.start, 360);
+			zone1.end = A.mod(zone1.end - zone2.start, 360);
+			zone2.start = 0;
+		}
+
+		var o = zone1.start > zone2.start && zone1.start < zone2.end
+			||  zone1.end   > zone2.start && zone1.end < zone2.end;
+		return o;
+	}
 	
 	//---------------
 	// Easeljs Tools
@@ -292,16 +355,21 @@ var alchemy = alchemy || {};
 	//onPress: called onPress
 	//onMouseUp: called onMouseUp
 	//before: called before moving is down on mouse move
+	//	if before returns false dragging will not occur
 	//after: called after moving is done on mouse move
-	A.makeDraggable = function(displayObject, options){
-		
+	A.makeDraggable = function(displayObject, options){	
+		options = options || {};
 		displayObject.onPress = function(evt){
 			if(options.onPress)
 				options.onpress(evt);
 			var localPoint = evt.target.globalToLocal(evt.stageX, evt.stageY);
 			evt.onMouseMove = function(evt){
-				if(options.before)
-					options.before(evt);
+				var drag
+				if(options.before){
+					var drag = options.before(evt);
+					if(!drag)
+						return;
+				}
 				
 				//move
 				var globalPoint = evt.target.localToGlobal(localPoint.x, localPoint.y);

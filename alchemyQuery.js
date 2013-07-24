@@ -96,7 +96,6 @@
 			var ele = $(this);
 			ele.off('foward.pagify backward.pagify');
 			ele.empty();
-			console.log(ele.width());
 			/*
 			* Stores pagifyOptions on the element so in custom pagify events
 			* the pagify state can be accessed. 
@@ -117,7 +116,7 @@
 					var div = $('<div>');
 					div.css('background-color', alchemy.randomColor()).css('overflow', 'hidden');
 					return	div;
-				},
+				}
 			}, options);
 
 			ele.css({
@@ -263,7 +262,7 @@
 
 			container.css({
 				top: e.pageY - arrow.height()/2 - arrow.position().top + 1,
-				left: e.pageX - arrow.width()/2,
+				left: e.pageX - arrow.width()/2
 			});
 
 

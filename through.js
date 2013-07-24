@@ -23,6 +23,8 @@
 
 		var cfg = $.extend({
 			click: function(evt){return true;},
+			mousedown: function(evt){return true;},
+			mouseup: function(evt){return true;}
 			},options);
 	
 		/*
