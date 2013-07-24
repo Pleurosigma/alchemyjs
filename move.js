@@ -226,6 +226,9 @@
 					'user-select': 'none'
 				});
 				if(!evt.pageX){
+					if(!evt.originalEvent.touches[0]){
+						return false;
+					}
 					evt.pageX = evt.originalEvent.touches[0].pageX;
 					evt.pageY = evt.originalEvent.touches[0].pageY;
 				}

@@ -1,3 +1,8 @@
+/**
+*	alchemy.js
+*	Author: Logan Wilkerson
+*/
+
 var alchemy = alchemy || {};
 (function(A){	
 
@@ -109,6 +114,10 @@ var alchemy = alchemy || {};
 	A.isFunction = function(obj){
 		return Object.prototype.toString.call(obj) === '[object Function]';
 	};
+
+	A.isString = function(obj){
+		return Object.prototype.toString.call(obj) === '[object String]';
+	}
 	
 	/*
 	*	noop
