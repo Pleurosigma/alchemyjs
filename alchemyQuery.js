@@ -1,3 +1,9 @@
+/*
+*	alchemyQuery.js
+*	Author: Logan Wilkerson
+*
+*	The jquery plugin of things I find useful
+*/
 (function($){
 	$.fn.toggleHeight = function(time, shrink){
 		this.toggleDimension({time:time, shrink:shrink})

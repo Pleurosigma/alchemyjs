@@ -1,6 +1,8 @@
 /**
 *	alchemy.js
 *	Author: Logan Wilkerson
+*
+*	Javascript tools I find useful. Lots of math tools
 */
 
 var alchemy = alchemy || {};
@@ -30,9 +32,15 @@ var alchemy = alchemy || {};
 		var images = [];
 		var imagesLoaded = 0;
 		for (var i in sources){
-			if(options.cache && A.loadImages._cache[sources[i]]){
+			if(options.cache && (sources[i] in A.loadImages._cache)){
 				images.push(A.loadImages._cache[sources[i]]);
 				imagesLoaded += 1;
+				if(sources.length == 1){
+					options.success(A.loadImages._cache[sources[i]]);
+				}
+				else if(imagesLoaded == sources.length && options.success){
+					options.success(images);
+				}
 				continue;
 			}
 			var image = new Image();
@@ -58,17 +66,6 @@ var alchemy = alchemy || {};
 			image.src = sources[i];
 		}
 	};
-
-	A.loadImage = function(source, options){
-		var queue = new createjs.LoadQueue(false);
-		queue.loadFile({id:'img', src:source});
-		queue.addEventListener('complete', function(){
-			var image = queue.getResult('img');
-			image.crossOrigin = '';
-			//console.log(image);
-			options.success(image);
-		})
-	}
 	
 	// Clears the image cache
 	A.clearImageCache = function(){
@@ -144,6 +141,12 @@ var alchemy = alchemy || {};
 			result.push(i);
 		};
 		return result;
+	}
+
+	A.getCords = function(evt){
+		var cords = {};
+		if(typeof evt.pageX != 'undefined' && typeof evt.pageY != 'undefined')
+			return {x: evt.pageX, y: evt.pageY}
 	}
 	
 	//-----------------

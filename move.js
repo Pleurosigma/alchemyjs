@@ -181,6 +181,13 @@
 		}
 	}
 
+	$.fn.opacity = function(o){
+		return this.css({
+			opacity: o,
+			filter: 'alpha(opacity=' + (o*10).toString() + ')'
+		});
+	}
+
 	$.fn.background = function(){
 		this.css({
 			'z-index': move.background
@@ -219,12 +226,6 @@
 			var startDragging = function(evt, ele){
 				var e = $.extend(evt, {type:'dragstart'});
 				ele.trigger(e);
-				$('html *').css({
-					'-webkit-user-select': 'none',
-					'-moz-user-select': 'none',
-					'-ms-user-select': 'none',
-					'user-select': 'none'
-				});
 				if(!evt.pageX){
 					if(!evt.originalEvent.touches[0]){
 						return false;
@@ -250,12 +251,6 @@
 				var dragEnd = function(evt){
 					$('html').off('mousemove touchmove', drag);
 					$('html').off('mouseup touchend', dragEnd);
-					$('html *').css({
-						'-webkit-user-select': 'all',
-						'-moz-user-select': 'all',
-						'-ms-user-select': 'element',
-						'user-select': 'all'
-					});
 					var e = $.extend(evt, {type:'dragstop'});
 					ele.trigger(e);
 
