@@ -21,6 +21,9 @@
 	move.midground = 9;
 	move.foreground = 10;
 
+	move.monitoringTouchEnd = false;
+	move.previousTouchEnd = null;
+
 	/*
 	*	Prepares an object to be moved. It supposed a number of options
 	*
@@ -31,7 +34,7 @@
 	*		none static parent.
 	*
 	*	regX, regY: The point, relative to the top left corner of the element, where the object
-	*		is "registered." All operations move operations take place relative to the registration 
+	*		is "registered." All move operations take place relative to the registration 
 	*		point.
 	*
 	*	position: The css position to set the object to. 'absolute' by default
@@ -48,8 +51,8 @@
 		return this.each(function(){
 			var ele = $(this);
 			var s = $.extend({
-				x: ele.position().left,
-				y: ele.position().top,
+				x: 0,
+				y: 0,
 				regX: 0,
 				regY: 0,
 				position: 'absolute', 
@@ -57,11 +60,12 @@
 				minX: -Infinity, 
 				minY: -Infinity, 
 				maxX: Infinity, 
-				maxY: Infinity
-			}, options)
+				maxY: Infinity,
+				defaultZ: move.midground
+			}, options);
 			ele.css({
 				'position': s.position,
-				'z-index': move.background				
+				'z-index': s.defaultZ				
 			})
 			ele.origin(s.regX, s.regY);
 			ele.data('move', s);
@@ -70,11 +74,12 @@
 			ele.y(s.y);
 			ele.addClass('moveable');
 		});
+		console.log('exiting move');
 	};
 
 	//sets the current reg values
 	$.fn.origin = function(regX, regY){
-		var origin = regX + ' ' + regY;
+		var origin = regX + 'px ' + regY + 'px';
 		this.css({
 			'-webkit-transform-origin': origin,
 			'-moz-transform-origin': origin,
@@ -181,31 +186,99 @@
 		}
 	}
 
+	$.fn.maxX = function(maxX){
+		if(typeof maxX != 'undefined'){
+			this.data('move').maxX = maxX;
+			this.x(this.x());
+			return this;
+		}
+		else{
+			return this.data('move').maxX;
+		}
+	}
+
+	$.fn.minX = function(minX){
+		if(typeof minX != 'undefined'){
+			this.data('move').minX = minX;
+			this.x(this.x());
+			return this;
+		}
+		else{
+			return this.data('move').minX;
+		}
+	}
+
+	$.fn.maxY = function(maxY){
+		if(typeof maxY != 'undefined'){
+			this.data('move').maxY = maxY;
+			this.y(this.y());
+			return this;
+		}
+		else{
+			return this.data('move').maxY;
+		}
+	}
+
+	$.fn.minY = function(minY){
+		if(typeof minY != 'undefined'){
+			this.data('move').minY = minY;
+			this.y(this.y());
+			return this;
+		}
+		else{
+			return this.data('move').minY;
+		}
+	}
+
+
 	$.fn.opacity = function(o){
 		return this.css({
 			opacity: o,
-			filter: 'alpha(opacity=' + (o*10).toString() + ')'
+			filter: 'alpha(opacity=' + (o*100).toString() + ')'
 		});
 	}
 
 	$.fn.background = function(){
-		this.css({
-			'z-index': move.background
+		return this.each(function(){
+			$(this).css({
+				'z-index': move.background
+			});
 		});
 	}
 
-	$.fn.midground = function(){		
-		this.css({
-			'z-index': move.midground
+	$.fn.midground = function(){	
+		return this.each(function(){
+			$(this).css({
+				'z-index': move.midground
+			});
 		});
 	}
 
 	$.fn.foreground = function(){
-		this.css({
-			'z-index': move.foreground
+		return this.each(function(){
+			$(this).css({
+				'z-index': move.foreground
+			});
 		});
 	}
 
+
+	$.fn.defaultground = function(){
+		return this.each(function(){
+			$(this).css({
+				'z-index': $(this).data('move').defaultZ
+			});
+		});
+	}
+
+	var monitorTouchEnd = function(){	
+		if(!move.monitoringTouchEnd){
+			$('html').on('touchend', function(evt){
+				move.previousTouchEnd = evt;
+			});
+			move.monitoringTouchEnd = true;
+		}
+	}
 
 	/*
 	* allows the object to be grabbeds
@@ -213,17 +286,24 @@
 	* dragstop
 	* dragstep
 	* currently allows dragging on mobile by default, non-configurable at the moment
+	* smoothMouse
+	* smoothTouch
+	* smoothDistance
 	*/
 	$.fn.drag = function(options){
 		var opt = $.extend({
-			dragpick: true
-
+			dragpick: true,
+			smoothDistance: 0,
+			smoothMouse: false,
+			smoothTouch: false
 		}, options);
+		monitorTouchEnd();
 		return this.each(function(){
 			//prevents image ghost while dragging
 			$(this).attr('draggable', false); 
 			$(this).data('move').drag = true;
-			var startDragging = function(evt, ele){
+			var startDragging = function(evt){
+				var ele = $(this);
 				var e = $.extend(evt, {type:'dragstart'});
 				ele.trigger(e);
 				if(!evt.pageX){
@@ -240,11 +320,37 @@
 						evt.pageX = evt.originalEvent.touches[0].pageX;
 						evt.pageY = evt.originalEvent.touches[0].pageY;
 					}
-					evt.preventDefault();			
-					ele.x(evt.pageX + dX);
-					ele.y(evt.pageY + dY);
-					var e = $.extend(evt, {type:'dragstep'});
-					ele.trigger(e);
+					evt.preventDefault();
+					var skip = false;
+					/*
+					*	There's a weird glitch where sometimes touchmoves
+					*	will be equal to the previous touchend. I skip those.
+					*	technically this can skip some valid moves, but I
+					*	hope it won't be much of an issue.
+					*/
+					if(move.previousTouchEnd){
+						var endX = move.previousTouchEnd.originalEvent.changedTouches[0].pageX;
+						var endY = move.previousTouchEnd.originalEvent.changedTouches[0].pageY;
+						if(evt.pageX == endX && evt.pageY == endY){
+							skip = true;
+						}
+					}
+					if(!skip){
+						var nPos = {x: evt.pageX + dX, y:evt.pageY + dY};
+						var dragDis = Math.sqrt(Math.pow(nPos.x - ele.x(), 2) + Math.pow(nPos.y - ele.y(), 2));
+						if(typeof TouchEvent != 'undefined' && (evt.originalEvent instanceof TouchEvent)){
+							smooth = opt.smoothTouch;
+						}
+						else{
+							smooth = opt.smoothMouse;
+						}
+						if(!smooth || dragDis < opt.smoothDistance){
+							ele.x(nPos.x);
+							ele.y(nPos.y);
+						}
+						var e = $.extend(evt, {type:'dragstep'});
+						ele.trigger(e);
+					}
 					evt.stopPropagation();		
 					return false;
 				}
@@ -261,6 +367,7 @@
 			$(this).on('drag.move', startDragging);
 			$(this).on('mousedown touchstart', function(evt){
 				evt.preventDefault();
+				$('html').trigger(evt);
 				var ele = $(this);
 				if(opt.dragpick){					
 					if(!evt.pageX){
@@ -270,7 +377,7 @@
 					ele = pointpick(evt.pageX, evt.pageY)
 				}
 				if(ele){
-					startDragging(evt, ele);
+					startDragging.call(this, evt, ele);
 				}
 				return false;
 			});
@@ -302,7 +409,7 @@
 		$.each(hidden, function(index, value){
 			value.show();
 		})
-		$('.moveable').midground();
+		$('.moveable').defaultground();
 		if(closestEle){
 			closestEle.foreground();
 		}

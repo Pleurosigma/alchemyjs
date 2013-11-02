@@ -135,7 +135,7 @@
 			var pageContainer = $('<div>');
 			pageContainer.css({
 				width: '100%',
-				height: '100%'
+				height: '100%'	
 			});
 			ele.append(pageContainer);
 
@@ -178,8 +178,12 @@
 						var nextChunk = getChunk(options);
 						if(nextChunk){
 							pageContainer.append(nextChunk);
+							
 							var newWidth = pageContainer.width() + (parseInt(options.width) * options.pagesPerChunk);
 							pageContainer.width(newWidth);
+							
+							/** Cam added 
+							adjustProductSize();**/
 						}
 					}
 
@@ -200,7 +204,14 @@
 					}
 					
 					var tarChunk = $(pageContainer.children()[prevChunkNum]);
+					/** Cam removed **/
 					var margin = Math.ceil(parseInt(tarChunk.css('margin-left')) / options.width) * options.width - (options.width*mult);
+					/** end Cam removed **/
+					
+					/** Cam added **/
+					//var pageWidth = $('.page', tarChunk).first().width();
+					//var margin = Math.ceil(parseInt(tarChunk.css('margin-left')) / pageWidth) * pageWidth - (pageWidth*mult);
+					/** end Cam added **/
 					tarChunk.animate({'margin-left' : margin}, options.time, function(){turned=true});
 					pageContainer.parent().trigger('pageturn.pagify');
 				};
