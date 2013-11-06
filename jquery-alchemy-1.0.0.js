@@ -6,40 +6,40 @@
 */
 (function($){
 	$.fn.toggleHeight = function(time, shrink){
-		this.toggleDimension({time:time, shrink:shrink})
-	}
+		this.toggleDimension({time:time, shrink:shrink});
+	};
 
 	$.fn.toggleWidth = function(time, shrink){
-		this.toggleDimension({time:time, shrink:shrink, dimension:width})
-	}
+		this.toggleDimension({time:time, shrink:shrink, dimension:width});
+	};
 
 	/*
 	*	toggleDimension 
 	*/
 	$.fn.toggleDimension = function(options){
-		var options = $.extend({
+		options = $.extend({
 			dimension: "height",
 			shrink: false,
 			time: 500
-		}, options)
+		}, options);
 
 		return this.each(function(){
 			var minDim = parseInt($(this).css('min-' + options.dimension));
 			var shrink = typeof options.shrink != 'undefined' ? options.shrink : $(this)[options.dimension]() != minDim;
 
 			if(shrink){
-				var obj = {}
+				var obj = {};
 				obj[options.dimension] = minDim;
 				$(this).animate(obj, options.time);
 			}
 			else{
 				var maxDim = parseInt($(this).css('max-' + options.dimension));
-				var obj = {}
+				var obj = {};
 				obj[options.dimension] = maxDim;
 				$(this).animate(obj, options.time);
 			}
 		});
-	}
+	};
 
 	/*
 	*	rotates an elements
@@ -55,7 +55,7 @@
 		return this.each(function(){
 			$(this).css(css);
 		});
-	}
+	};
 
 	/*
 	*	pagify
@@ -156,7 +156,7 @@
 
 				//Returns the chunkNumber of a page
 				var getChunkNum = function(pageNum){
-					if(pageNum == 0)
+					if(pageNum === 0)
 						return 0;
 					return parseInt(pageNum / options.pagesPerChunk);
 				};
@@ -226,7 +226,7 @@
 
 			})(pageContainer, this.pagifyOptions);
 		});
-	}
+	};
 
 	var getChunk = function(o){
 		var nextChunk = o.getPages();
@@ -236,16 +236,16 @@
 			float: 'left',
 			width: o.width * o.pagesPerChunk,
 			height: o.height
-		})
+		});
 		$(nextChunk).children().each(function(){
 			$(this).css({
 				height: '100%',
 				width: o.width,
 				float: 'left'
-			})
+			});
 		});
 		return nextChunk;
-	}
+	};
 
 	/*
 	*	Creates a message bubble on the mouse
@@ -307,7 +307,7 @@
 		return this.on(o.events, createBubble);
 
 
-	}
+	};
 
 
 }(jQuery));

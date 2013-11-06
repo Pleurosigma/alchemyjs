@@ -4,20 +4,21 @@
 *
 *	A jQuery plugin to move elements with.
 */
+var jQuery = jQuery || {};
 (function($){
 	var move = {};
 
 	move.dist = function(x1, y1, x2, y2){
 		return Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
-	}
+	};
 
 	//grabs an element from the page given 
 	move.elementFromPoint = function(x, y){
 		return document.elementFromPoint(x - window.pageXOffset, y - window.pageYOffset);
-	}
+	};
 
 	//z-indexes
-	move.background = 8
+	move.background = 8;
 	move.midground = 9;
 	move.foreground = 10;
 
@@ -66,7 +67,7 @@
 			ele.css({
 				'position': s.position,
 				'z-index': s.defaultZ				
-			})
+			});
 			ele.origin(s.regX, s.regY);
 			ele.data('move', s);
 			ele.rotate(s.rotation);
@@ -74,7 +75,6 @@
 			ele.y(s.y);
 			ele.addClass('moveable');
 		});
-		console.log('exiting move');
 	};
 
 	//sets the current reg values
@@ -86,7 +86,7 @@
 			'-ms-transform-origin': origin,
 			'transform-origin': origin
 		});		
-	}
+	};
 
 	/**
 	*	returns current rotation or sets rotation
@@ -127,7 +127,7 @@
 			return this.data('move').x;
 		}
 		
-	}
+	};
 
 	//Sets or returns the current x value
 	$.fn.y = function(y){
@@ -145,7 +145,7 @@
 			return this.data('move').y;
 		}
 		
-	}
+	};
 
 	//sets both x and y or returns the values as {x:x(), y:y()}
 	$.fn.cords = function(cords){
@@ -158,9 +158,9 @@
 			return {
 				x: this.x(),
 				y: this.y()
-			}
+			};
 		}
-	}
+	};
 
 	//sets or returns regX
 	$.fn.regX = function(regX){
@@ -172,7 +172,7 @@
 		else{
 			return this.data('move').regX;
 		}
-	}
+	};
 
 	//sets or returns regY
 	$.fn.regY = function(regY){
@@ -184,7 +184,7 @@
 		else{
 			return this.data('move').regY;
 		}
-	}
+	};
 
 	$.fn.maxX = function(maxX){
 		if(typeof maxX != 'undefined'){
@@ -195,7 +195,7 @@
 		else{
 			return this.data('move').maxX;
 		}
-	}
+	};
 
 	$.fn.minX = function(minX){
 		if(typeof minX != 'undefined'){
@@ -206,7 +206,7 @@
 		else{
 			return this.data('move').minX;
 		}
-	}
+	};
 
 	$.fn.maxY = function(maxY){
 		if(typeof maxY != 'undefined'){
@@ -217,7 +217,7 @@
 		else{
 			return this.data('move').maxY;
 		}
-	}
+	};
 
 	$.fn.minY = function(minY){
 		if(typeof minY != 'undefined'){
@@ -228,7 +228,7 @@
 		else{
 			return this.data('move').minY;
 		}
-	}
+	};
 
 
 	$.fn.opacity = function(o){
@@ -236,7 +236,7 @@
 			opacity: o,
 			filter: 'alpha(opacity=' + (o*100).toString() + ')'
 		});
-	}
+	};
 
 	$.fn.background = function(){
 		return this.each(function(){
@@ -244,7 +244,7 @@
 				'z-index': move.background
 			});
 		});
-	}
+	};
 
 	$.fn.midground = function(){	
 		return this.each(function(){
@@ -252,7 +252,7 @@
 				'z-index': move.midground
 			});
 		});
-	}
+	};
 
 	$.fn.foreground = function(){
 		return this.each(function(){
@@ -260,7 +260,7 @@
 				'z-index': move.foreground
 			});
 		});
-	}
+	};
 
 
 	$.fn.defaultground = function(){
@@ -269,7 +269,7 @@
 				'z-index': $(this).data('move').defaultZ
 			});
 		});
-	}
+	};
 
 	var monitorTouchEnd = function(){	
 		if(!move.monitoringTouchEnd){
@@ -278,7 +278,7 @@
 			});
 			move.monitoringTouchEnd = true;
 		}
-	}
+	};
 
 	/*
 	* allows the object to be grabbeds
@@ -338,6 +338,7 @@
 					if(!skip){
 						var nPos = {x: evt.pageX + dX, y:evt.pageY + dY};
 						var dragDis = Math.sqrt(Math.pow(nPos.x - ele.x(), 2) + Math.pow(nPos.y - ele.y(), 2));
+						var smooth;
 						if(typeof TouchEvent != 'undefined' && (evt.originalEvent instanceof TouchEvent)){
 							smooth = opt.smoothTouch;
 						}
@@ -353,17 +354,17 @@
 					}
 					evt.stopPropagation();		
 					return false;
-				}
+				};
 				var dragEnd = function(evt){
 					$('html').off('mousemove touchmove', drag);
 					$('html').off('mouseup touchend', dragEnd);
 					var e = $.extend(evt, {type:'dragstop'});
 					ele.trigger(e);
 
-				}
+				};
 				$('html').on('mousemove touchmove', drag);
-				$('html').on('mouseup touchend', dragEnd)
-			}
+				$('html').on('mouseup touchend', dragEnd);
+			};
 			$(this).on('drag.move', startDragging);
 			$(this).on('mousedown touchstart', function(evt){
 				evt.preventDefault();
@@ -374,7 +375,7 @@
 						evt.pageX = evt.originalEvent.touches[0].pageX;
 						evt.pageY = evt.originalEvent.touches[0].pageY;
 					}
-					ele = pointpick(evt.pageX, evt.pageY)
+					ele = pointpick(evt.pageX, evt.pageY);
 				}
 				if(ele){
 					startDragging.call(this, evt, ele);
@@ -382,7 +383,7 @@
 				return false;
 			});
 		});
-	}
+	};
 
 	//picks element whos regX/regY is closest to the given point
 	var pointpick = function(x, y){
@@ -408,11 +409,11 @@
 		}
 		$.each(hidden, function(index, value){
 			value.show();
-		})
+		});
 		$('.moveable').defaultground();
 		if(closestEle){
 			closestEle.foreground();
 		}
 		return closestEle;
-	}
+	};
 }(jQuery));
