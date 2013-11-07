@@ -6,6 +6,7 @@
 */
 var jQuery = jQuery || {};
 (function($){
+	'use strict';
 	var move = {};
 
 	move.dist = function(x1, y1, x2, y2){
@@ -378,7 +379,7 @@ var jQuery = jQuery || {};
 					ele = pointpick(evt.pageX, evt.pageY);
 				}
 				if(ele){
-					startDragging.call(this, evt, ele);
+					startDragging.call(ele, evt);
 				}
 				return false;
 			});
@@ -391,11 +392,13 @@ var jQuery = jQuery || {};
 		var closestEle;
 		var minDist = Infinity;
 		var ele;
-		while((ele = move.elementFromPoint(x, y)) 
-			&& ele.tagName != 'BODY' && ele.tagName != 'HTML'){
+		while((ele = move.elementFromPoint(x, y)) && 
+				ele.tagName != 'BODY' && ele.tagName != 'HTML'){
 			ele = $(ele);
 			if(ele.hasClass('moveable') && ele.data('move').drag){
-				var dist = move.dist(ele.x(), ele.y(), x, y);
+				var relX = x - ele.parent().offset().left;
+				var relY = y - ele.parent().offset().top;
+				var dist = move.dist(ele.x(), ele.y(), relX, relY);
 				if(dist < minDist){
 					closestEle = ele;
 					minDist = dist;
